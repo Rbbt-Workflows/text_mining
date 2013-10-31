@@ -1,0 +1,20 @@
+- action_card = ActionCard.new
+= action_card_render action_card do
+  %ul.ihop_sentences
+    - interactions = entity.tagged_ihop_interactions
+    - if interactions and interactions.any?
+      - interactions.each do |sentence|
+        %li= sentence
+    - else
+      No interactions found in iHOP
+
+:sass
+  ihopatom
+    color: gray
+    actionverblink
+      color: green
+    chemicalcompound
+      color: pink
+    meshlink
+      color: blue
+

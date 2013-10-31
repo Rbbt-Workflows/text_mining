@@ -1,0 +1,35 @@
+- action_card = ActionCard.new do
+  - input :full_text, :boolean, "Use full text", false
+  - input :normalize, :strinb, "Normalize mentions", true, :hide => true
+  - input :method, :strinb, "Organism code", "dictionary", :hide => true
+  - input :organism, :string, "Organism code", "Hsa"
+
+= action_card_render action_card do
+  - full_text = false if not defined? full_text or full_text.nil? or (String === full_text and full_text.empty?)
+  - full_text = true if full_text
+  %dl
+    - method = :dictionary
+    - organism = "Hsa"
+    - normalize = true
+    - list.default_type = :best if full_text
+    - log :text, "Gathering article text into corpus"
+    - list.text
+    - list.each do |document|
+      - log :mentions, "Finding mentions for #{ document }"
+      - mentions = document.gene_mentions(:normalize => normalize, :method => method, :organism => organism)
+      %dt
+        = document.link
+        \:
+        = document.title
+      %dd
+        - mentions = mentions.compact.uniq
+        - links = mentions.zip(document.sentences_over(mentions)).collect do |m, sentences| 
+          - entity = m.entity(:organism => organism)
+          - sentence = sentences.first || "NONE"
+          - begin
+            - title = (entity.name || entity) + ": " << (sentence.respond_to?(:unmask) ? sentence.unmask : sentence) 
+          - rescue
+            - title = "NONE"
+          - entity.link(m, :title => CGI.escapeHTML(title)) 
+
+        = links * ", "

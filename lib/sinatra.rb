@@ -1,0 +1,2 @@
+require 'document_corpus'
+
