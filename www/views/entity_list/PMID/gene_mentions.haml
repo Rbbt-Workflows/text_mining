@@ -1,7 +1,7 @@
 - action_card = ActionCard.new do
   - input :full_text, :boolean, "Use full text", false
-  - input :normalize, :strinb, "Normalize mentions", true, :hide => true
-  - input :method, :strinb, "Organism code", "dictionary", :hide => true
+  - input :normalize, :string, "Normalize mentions", true, :hide => true
+  - input :method, :select, "Gene NER method to use", :dictionary, :select_options => ['abner', 'banner', 'dictionary']
   - input :organism, :string, "Organism code", "Hsa"
 
 = action_card_render action_card do
@@ -14,7 +14,7 @@
     - list.default_type = :best if full_text
     - log :text, "Gathering article text into corpus"
     - list.text
-    - list.each do |document|
+    - TSV.traverse list, :type => :array, :bar => true do |document|
       - log :mentions, "Finding mentions for #{ document }"
       - mentions = document.gene_mentions(:normalize => normalize, :method => method, :organism => organism)
       %dt
