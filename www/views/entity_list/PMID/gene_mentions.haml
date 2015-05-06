@@ -1,6 +1,6 @@
 - action_card = ActionCard.new do
   - input :full_text, :boolean, "Use full text", false
-  - input :normalize, :string, "Normalize mentions", true, :hide => true
+  - input :normalize, :boolean, "Normalize mentions", true, :hide => true
   - input :method, :select, "Gene NER method to use", :dictionary, :select_options => ['abner', 'banner', 'dictionary']
   - input :organism, :string, "Organism code", "Hsa"
 
