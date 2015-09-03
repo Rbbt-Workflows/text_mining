@@ -7,6 +7,7 @@ require 'rbbt/sources/jochem'
 require 'rbbt/ner/linnaeus'
 require 'rbbt/ner/abner'
 require 'rbbt/ner/banner'
+require 'rbbt/ner/rnorm'
 require 'rbbt/ner/ngram_prefix_dictionary'
 require 'rbbt/nlp/open_nlp/sentence_splitter'
 
@@ -149,6 +150,25 @@ module TextMining
     
   end
   export_exec :pmid_citation
+
+  input :reference_terms, :array, "Reference terms"
+  input :un_normalized, :array, "Un-normalized terms"
+  task :normalize_terms => :tsv do |reference_terms,un_normalized|
+    #reference_terms = TSV.setup(Hash[*reference_terms.zip(reference_terms).flatten], :type => :single)
+    reference_terms = TSV.setup(reference_terms, :type => :list, :key_field => "Reference")
+    reference_terms.add_field "Term" do |k,v|
+      Array === k ? k.first : k
+    end
+    norm = Normalizer.new reference_terms
+    trans = TSV.setup({}, :key_field => "Term", :fields => ["Best reference matches"], :type => :flat)
+    missing = 0
+    un_normalized.each do |term|
+      matches = norm.resolve(term, nil, :threshold => -100)
+      trans[term] = matches
+    end
+    trans
+  end
+  export_asynchronous :normalize_terms
 
 end
 
