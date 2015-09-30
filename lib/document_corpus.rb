@@ -19,7 +19,7 @@ module Document
 
   property :gene_mentions => :single do |*args|
     options = args.first || {}
-    options = Misc.add_defaults options, :method => :dictionary, :normalize => true, :organism => "Hsa"
+    options = Misc.add_defaults options, :method => :dictionary, :normalize => true, :organism => Organism.default_code("Hsa")
 
     method, normalize, organism, full_text = Misc.process_options options, :method, :normalize, :organism, :full_text
 

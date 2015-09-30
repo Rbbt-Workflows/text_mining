@@ -29,7 +29,7 @@ module TextMining
                               when 'banner'
                                 Banner.new
                               when 'dictionary'
-                                NGramPrefixDictionary.new Organism.lexicon("Hsa"), "Ensembl Gene ID"
+                                NGramPrefixDictionary.new Organism.lexicon(Organism.default_code("Hsa")), "Ensembl Gene ID"
                               when 'jochem'
                                 NGramPrefixDictionary.new JoChem.lexicon.tsv(:persist => true, :type => :flat, :fields => [1]), "JoChem:Chemical", true
                               else 
@@ -69,7 +69,7 @@ module TextMining
   input :text, :text, "Text to process"
   input :method, :select, "Gene NER method to use", :abner, :select_options => ['abner', 'banner', 'dictionary']
   input :normalize, :boolean, "Try to normalize entities", false
-  input :organism, :string, "Organism to use for the normalization", "Hsa/jun2011"
+  input :organism, :string, "Organism to use for the normalization", Organism.default_code("Hsa")
   def self.gene_mention_recognition(text, method, normalize, organism)
     return [] if text.nil? or text.strip.empty?
     ner = get_ner(method)

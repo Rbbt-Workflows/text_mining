@@ -3,7 +3,7 @@
 %ul
   - result.each do |mention|
     - if String === mention.code and mention.code =~ /Ensembl Gene ID:./
-      - gene = Gene.setup(mention.code.split(":").last, "Ensembl Gene ID", "Hsa/jun2011")
+      - gene = Gene.setup(mention.code.split(":").last, "Ensembl Gene ID", Organism.default_code("Hsa"))
       %li= gene.link
     - else
       %li= mention

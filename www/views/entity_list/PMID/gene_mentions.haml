@@ -2,19 +2,19 @@
   - input :full_text, :boolean, "Use full text", false
   - input :normalize, :boolean, "Normalize mentions", true, :hide => true
   - input :method, :select, "Gene NER method to use", :dictionary, :select_options => ['abner', 'banner', 'dictionary']
-  - input :organism, :string, "Organism code", "Hsa"
+  - input :organism, :string, "Organism code", Organism.default_code("Hsa")
 
 = action_card_render action_card do
   - full_text = false if not defined? full_text or full_text.nil? or (String === full_text and full_text.empty?)
   - full_text = true if full_text
   %dl
     - method = :dictionary
-    - organism = "Hsa"
+    - organism = Organism.default_code("Hsa")
     - normalize = true
     - list.default_type = :best if full_text
     - log :text, "Gathering article text into corpus"
     - list.text
-    - TSV.traverse list, :type => :array, :bar => true do |document|
+    - TSV.traverse list, :type => :array, :bar => @step.progress_bar('Procesing articles') do |document|
       - log :mentions, "Finding mentions for #{ document }"
       - mentions = document.gene_mentions(:normalize => normalize, :method => method, :organism => organism)
       %dt
@@ -29,6 +29,7 @@
           - begin
             - title = (entity.name || entity) + ": " << (sentence.respond_to?(:unmask) ? sentence.unmask : sentence) 
           - rescue
+            - Log.exception $!
             - title = "NONE"
           - entity.link(m, :title => CGI.escapeHTML(title)) 
 
