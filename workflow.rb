@@ -143,7 +143,7 @@ module TextMining
     bibtex = PubMed.get_article(pmids).values_at(*pmids).collect{|article|
       article.bibtex
     } * "\n\n"
-
+    Rbbt.software.opt.bibtex2html.produce
     TmpFile.with_file(bibtex, true, :extension => 'bib') do |bibfile|
       CMD.cmd("#{Rbbt.software.opt.bibtex2html.bin.bibtex2html.find} '#{ bibfile }'")
     end

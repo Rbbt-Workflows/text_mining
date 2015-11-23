@@ -6,7 +6,8 @@ TextMining=/$PWD filter="*.rb *.genotype *.haml *.sass *.js *.txt *.tsv" {
  }
  share=share{
   install=install{
-   software=software{
+   software=software filter="*"{
+    bibtex2html
    }
   }
  }
