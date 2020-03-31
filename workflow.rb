@@ -173,3 +173,4 @@ module TextMining
 
 end
 
+require 'TextMining/tasks/classifcation'

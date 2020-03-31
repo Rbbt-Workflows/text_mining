@@ -3,6 +3,14 @@ TextMining=/$PWD filter="*.rb *.genotype *.haml *.sass *.js *.txt *.tsv" {
  lib=lib{
   sinatra.rb
   document_corpus.rb
+  TextMining=TextMining{
+   tasks=tasks{
+    classifcation.rb
+   }
+  }
+ }
+ python=python{
+  LSTM.py
  }
  share=share{
   install=install{
