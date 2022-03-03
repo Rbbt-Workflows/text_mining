@@ -3,7 +3,7 @@ require 'rbbt/workflow'
 require 'rbbt/resource'
 require 'rbbt/sources/organism'
 require 'rbbt/sources/pubmed'
-require 'rbbt/ner/segment/named_entity'
+require 'rbbt/segment/named_entity'
 require 'rbbt/sources/jochem'
 require 'rbbt/ner/linnaeus'
 require 'rbbt/ner/abner'
@@ -60,7 +60,7 @@ module TextMining
 
   input :text, :text, "Text to process"
   def self.split_sentences(text)
-    sentences = OpenNLP.sentence_splitter(text)
+    sentences = OpenNLP.sentence_splitter(text.dup)
     sentences
   end
   task :split_sentences=> :annotations
