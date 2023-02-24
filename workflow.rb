@@ -13,8 +13,13 @@ require 'rbbt/ner/ngram_prefix_dictionary'
 require 'rbbt/nlp/open_nlp/sentence_splitter'
 
 Workflow.require_workflow "Translation"
+Workflow.require_workflow "ExTRI2"
 module TextMining
   extend Workflow
+
+  CORPUS = Document::Corpus.setup(Rbbt.var.TextMining.corpus.find)
+  ANNOTATIONS = Rbbt.var.TextMining.annotations.find
+  ANNOTATION_REPO = Rbbt.var.TextMining.annotation_repo.find
 
   Rbbt.claim Rbbt.software.opt.bibtex2html, :install, Rbbt.share.install.software.bibtex2html.find
 
@@ -174,3 +179,4 @@ module TextMining
 end
 
 require 'TextMining/tasks/classifcation'
+require 'TextMining/tasks/fine_tune'

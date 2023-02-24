@@ -6,6 +6,7 @@ TextMining=/$PWD filter="*.rb *.genotype *.haml *.sass *.js *.txt *.tsv" {
   TextMining=TextMining{
    tasks=tasks{
     classifcation.rb
+    fine_tune.rb
    }
   }
  }
