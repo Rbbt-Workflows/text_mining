@@ -5,8 +5,10 @@ TextMining=/$PWD filter="*.rb *.genotype *.haml *.sass *.js *.txt *.tsv" {
   document_corpus.rb
   TextMining=TextMining{
    tasks=tasks{
-    classifcation.rb
+    corpus.rb
+    annotations.rb
     fine_tune.rb
+    classification.rb
    }
   }
  }

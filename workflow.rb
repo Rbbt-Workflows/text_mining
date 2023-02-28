@@ -181,26 +181,9 @@ module TextMining
   end
   export_asynchronous :normalize_terms
 
-  helper :corpus do 
-    TextMining::CORPUS
-  end
-
-  input :docids, :array, "DoIDs to process"
-  input :annotation_types, :array, "Annotation type to process"
-  task :annotations => :annotations do |docids,types|
-    documents = docids.collect{|d| corpus[d] }
-    documents.extend AnnotatedArray
-    types.collect do |type|
-      documents.send(type)
-    end.flatten
-  end
-
-  dep :annotations
-  task :annotids => :array do
-    step(:annotations).path.tsv(:fields => []).keys
-  end
-
 end
 
-#require 'TextMining/tasks/classifcation'
+require 'TextMining/tasks/corpus'
+require 'TextMining/tasks/annotations'
 require 'TextMining/tasks/fine_tune'
+require 'TextMining/tasks/classification'
