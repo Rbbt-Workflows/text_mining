@@ -64,7 +64,7 @@ module TextMining
 
     mlm.train
 
-    mlm.file('model/model')
+    mlm.model_path
   end
 
 end
