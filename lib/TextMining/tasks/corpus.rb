@@ -1,8 +1,5 @@
+require 'rbbt/document/corpus/pubmed'
 module TextMining
-
-  helper :corpus do 
-    TextMining::CORPUS
-  end
 
   input :pmids, :array, "PMIDs to load"
   task :load_pmids => :array do |pmids|

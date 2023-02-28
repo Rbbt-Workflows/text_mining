@@ -7,9 +7,12 @@ module TextMining
   task :classifier => :tsv do |positive_docids,negative_docids,annotation_types|
     checkpoint = step(:fine_tune).load
 
-    model = HuggingfaceModel.new "SequenceClassification", checkpoint, file('model'), :annotation_types => annotation_types
+    model = HuggingfaceModel.new "SequenceClassification", checkpoint, file('model'),
+      :annotation_types => annotation_types, 
+      :corpus_path => corpus.persistence_path
 
     model.extract_features do |docid,docid_list|
+      corpus = Document::Corpus.setup(@model_options[:corpus_path])
       if docid
         DocID.setup(docid, :corpus => corpus)
         document = docid.document
@@ -21,12 +24,13 @@ module TextMining
         res
       else
         DocID.setup(docid_list, :corpus => corpus)
-        annotids = @model_options[:annotation_types].collect{|type| documents.send(type) }.flatten
+        annotids = @model_options[:annotation_types].collect{|type| docid_list.send(type) }.flatten
         features = []
         docid_list.collect do |docid|
+          document = docid.document
           document_annotids = annotids.select{|a| a.docid == docid }
-          Transformed.with_transform(docid.document, document_annotids, Proc.new{|a| "[#{a.type}]"} ) do 
-            features << doc.dup
+          Transformed.with_transform(document, document_annotids, Proc.new{|a| "[#{a.type}]"} ) do 
+            features << document.dup
           end
         end
         features

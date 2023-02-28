@@ -1,6 +1,4 @@
-Document.define :cheap_sentences => :single do
-  self.split(".")
-end
+require 'rbbt/vector/model/huggingface/masked_lm'
 module TextMining
 
   input :docids, :array, "List of DocID to process"
@@ -10,9 +8,22 @@ module TextMining
   task :fine_tune => :string do |docids,annotids,mask_probability,checkpoint|
     checkpoint ||= "microsoft/BiomedNLP-PubMedBERT-base-uncased-abstract-fulltext"
 
+    tokens = docids.collect{|docid| corpus[docid].split(/ +|[.,]/).length }
+    max_model_length = 2
+    max_tokens = tokens.sort[tokens.length * 0.8]
+    set_info :max_tokens, max_tokens
+
+    max_tokens = max_tokens.to_f
+    while max_tokens > 2.2
+      max_model_length *= 2
+      max_tokens /= 2
+    end
+
+    set_info :max_model_length, max_model_length
+
     mlm = MaskedLMModel.new checkpoint, file(:model), 
       :training_args => {:per_device_train_batch_size => 1},
-      :tokenizer_args => {:model_max_length => 128, truncation: true}
+      :tokenizer_args => {:model_max_length => max_model_length, truncation: true}
     
     annotids = AnnotID.setup(annotids)
 

@@ -4,11 +4,17 @@ TextMining=/$PWD filter="*.rb *.genotype *.haml *.sass *.js *.txt *.tsv" {
   sinatra.rb
   document_corpus.rb
   TextMining=TextMining{
+   entity=entity{
+    ner.rb
+    document.rb
+   }
    tasks=tasks{
     corpus.rb
     annotations.rb
     fine_tune.rb
     classification.rb
+
+    misc.rb
    }
   }
  }
