@@ -1,5 +1,28 @@
 #require 'rbbt/util/python'
 
+module TextMining
+  input :training_set, :tsv, "TSV with DocIDs and labels"
+  input :annotation_types, :array, "List of annotation types to replace with '[<AnnotId.type>]'"
+  input :checkpoint, :string, "Chekpoint dir or name to load"
+  task :classifier => :tsv do |training_set,annotation_types,checkpoint|
+    checkpoint ||= "microsoft/BiomedNLP-PubMedBERT-base-uncased-abstract-fulltext"
+    checkpoint = checkpoint.file('model/model') if Step === checkpoint
+
+    model = HuggingfaceModel.new "SequenceClassification", checkpoint, file(:model)
+
+    model.extract_features do |document,list|
+      document.replace_segments(document.gnp, "[GENE]")
+    end
+
+    TSV.traverse step(:training_set) do |pmid,label|
+      document = ExTRI2::CORPUS.add_pmid pmid
+      model.add document, label.to_i
+    end
+
+    model.cross_validation(3)
+  end
+end
+
 #module TextMining
 #  RbbtPython.add_path Rbbt.python.find(:lib)
 #

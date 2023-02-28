@@ -1,33 +1,44 @@
-
+Document.define :cheap_sentences => :single do
+  self.split(".")
+end
 module TextMining
 
-  input :pmids, :array, "List of PMIDs", ExTRI2.job(:relevant_pmids).run[0..1000]
-  task :docids => :array do |pmids|
-    documents = ExTRI2::CORPUS.add_pmid pmids
-    documents.docid
-  end
-
-  dep :docids
-  task :gene_fine_tune => :string do |pmids|
-    checkpoint = "microsoft/BiomedNLP-PubMedBERT-base-uncased-abstract-fulltext"
+  input :docids, :array, "List of DocID to process"
+  input :checkpoint, :string, "Chekpoint dir or name to load"
+  dep :annotids
+  task :fine_tune => :string do |docids,checkpoint|
+    checkpoint ||= "microsoft/BiomedNLP-PubMedBERT-base-uncased-abstract-fulltext"
     mlm = MaskedLMModel.new checkpoint, file(:model), 
       :training_args => {:per_device_train_batch_size => 1},
       :tokenizer_args => {:model_max_length => 128, truncation: true}
+    
+    annotids = AnnotID.setup(step(:annotids).load)
 
-    mod, tokenizer = mlm.init
+    if annotids && ! annotids.empty?
+      mod, tokenizer = mlm.init
 
-    if tokenizer.vocab["[GENE]"].nil?
-      tokenizer.add_tokens("[GENE]")
+      types = annotids.collect{|s| s.type }.uniq
+
+      types.each do |type|
+        token = "[#{type}]"
+        if tokenizer.vocab[token].nil?
+          tokenizer.add_tokens(token)
+        end
+      end
+
       mod.resize_token_embeddings(tokenizer.__len__)
+    else
+      annotids = []
     end
 
     prob = 0.15
-    docids = DocID.setup(step(:docids).load, :corpus => ExTRI2::CORPUS)
+    docids = DocID.setup(docids, :corpus => corpus)
+    docids.extend AnnotatedArray
     documents = docids.document
+
     documents.each do |document|
-      genes = document.gnp
-      document.sentences.each do |sentence|
-        Transformed.with_transform(sentence, genes, "[GENE]") do 
+      document.cheap_sentences.each do |sentence|
+        Transformed.with_transform(sentence, annotids, Proc.new{|a| "[#{a.type}]"}) do 
           tokens = sentence.split(/( +|[^.,])/)
           masks = tokens.length.times.select{|i| tokens[i].length > 2 && rand < prob }
 
@@ -42,27 +53,11 @@ module TextMining
         end
       end
     end
+    raise
 
     mlm.train
-  end
 
-  dep :gene_fine_tune
-  dep ExTRI2, :training_set
-  task :classifier => :tsv do
-    checkpoint = step(:gene_fine_tune).file('model/model')
-
-    model = HuggingfaceModel.new "SequenceClassification", checkpoint, file(:model)
-
-    model.extract_features do |document,list|
-      document.replace_segments(document.gnp, "[GENE]")
-    end
-
-    TSV.traverse step(:training_set) do |pmid,label|
-      document = ExTRI2::CORPUS.add_pmid pmid
-      model.add document, label.to_i
-    end
-
-    model.cross_validation(3)
+    mlm.file('model/model')
   end
 
 end

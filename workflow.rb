@@ -4,10 +4,6 @@ require 'rbbt/resource'
 require 'rbbt/sources/organism'
 require 'rbbt/sources/pubmed'
 require 'rbbt/segment/named_entity'
-require 'rbbt/sources/jochem'
-require 'rbbt/ner/linnaeus'
-require 'rbbt/ner/abner'
-require 'rbbt/ner/banner'
 require 'rbbt/ner/rnorm'
 require 'rbbt/ner/ngram_prefix_dictionary'
 require 'rbbt/nlp/open_nlp/sentence_splitter'
@@ -26,17 +22,24 @@ module TextMining
   NER_METHODS = {}
   NORM = {}
 
+  def self.organism
+    "Hsa/feb2014"
+  end
+
   def self.get_ner(method)
     method = method.to_s.downcase
     if not TextMining::NER_METHODS.include?(method) or TextMining::NER_METHODS[method].nil?
       TextMining::NER_METHODS[method] = case method
                               when 'abner'
+                                require 'rbbt/ner/abner'
                                 Abner.new
                               when 'banner'
+                                require 'rbbt/ner/banner'
                                 Banner.new
                               when 'dictionary'
-                                NGramPrefixDictionary.new Organism.lexicon(Organism.default_code("Hsa")), "Ensembl Gene ID"
+                                NGramPrefixDictionary.new Organism.lexicon(TextMining.organism), "Ensembl Gene ID"
                               when 'jochem'
+                                require 'rbbt/sources/jochem'
                                 NGramPrefixDictionary.new JoChem.lexicon.tsv(:persist => true, :type => :flat, :fields => [1]), "JoChem:Chemical", true
                               else 
                                 raise "Method unidentified: #{ method }"
@@ -56,10 +59,12 @@ module TextMining
   end
 
   def self.get_jochem_norm(field = "Compound Name")
+    require 'rbbt/sources/jochem'
     @@jochem_norm ||= JoChem.identifiers.tsv :persist => true, :unnamed => true, :fields => [field], :type => :flat
   end
 
   def self.get_organism_ner
+    require 'rbbt/ner/linnaeus'
     Linnaeus
   end
 
@@ -75,7 +80,7 @@ module TextMining
   input :text, :text, "Text to process"
   input :method, :select, "Gene NER method to use", :abner, :select_options => ['abner', 'banner', 'dictionary']
   input :normalize, :boolean, "Try to normalize entities", false
-  input :organism, :string, "Organism to use for the normalization", Organism.default_code("Hsa")
+  input :organism, :string, "Organism to use for the normalization", TextMining.organism
   def self.gene_mention_recognition(text, method, normalize, organism)
     return [] if text.nil? or text.strip.empty?
     ner = get_ner(method)
@@ -105,7 +110,7 @@ module TextMining
 
   input :text, :text, "Text to process"
   input :method, :select, "Compound NER method to use", :JoChem, :select_options => ['JoChem']
-  input :format, :select, "Format to normalize to", "Compound Name", :select_options => JoChem.identifiers.fields
+  input :format, :select, "Format to normalize to", "Compound Name"
   def self.compound_mention_recognition(text, method, format = "Compound Name")
     return [] if text.nil? or text.strip.empty?
 
@@ -176,7 +181,26 @@ module TextMining
   end
   export_asynchronous :normalize_terms
 
+  helper :corpus do 
+    TextMining::CORPUS
+  end
+
+  input :docids, :array, "DoIDs to process"
+  input :annotation_types, :array, "Annotation type to process"
+  task :annotations => :annotations do |docids,types|
+    documents = docids.collect{|d| corpus[d] }
+    documents.extend AnnotatedArray
+    types.collect do |type|
+      documents.send(type)
+    end.flatten
+  end
+
+  dep :annotations
+  task :annotids => :array do
+    step(:annotations).path.tsv(:fields => []).keys
+  end
+
 end
 
-require 'TextMining/tasks/classifcation'
+#require 'TextMining/tasks/classifcation'
 require 'TextMining/tasks/fine_tune'

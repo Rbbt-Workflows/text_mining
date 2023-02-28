@@ -4,6 +4,7 @@ require 'rbbt/ner/segment/named_entity'
 require 'rbbt/ner/segment/docid'
 
 module Document
+
   property :sentences => :single do
     begin
       sentences = nil
