@@ -9,6 +9,7 @@ module TextMining
 
     model = HuggingfaceModel.new "SequenceClassification", checkpoint, file('model'),
       :annotation_types => annotation_types, 
+      :training_args => {fp16: true},
       :corpus_path => corpus.persistence_path
 
     model.extract_features do |docid,docid_list|

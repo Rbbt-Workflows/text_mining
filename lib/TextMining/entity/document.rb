@@ -48,7 +48,7 @@ end
 
 Document.define_multiple :ner_gnp do |list|
   list = Annotated.purge(list)
-  cpus = Rbbt::Config.get(:cpus, :gnp_ner, :GNormPlus, :GNP, :gnp, :default => 5).to_i
+  cpus = Rbbt::Config.get(:cpus, :gnp_ner, :GNormPlus, :GNP, :gnp, :default => 2).to_i
 
   chunk_size = 20
   num_chunks = list.length / chunk_size
