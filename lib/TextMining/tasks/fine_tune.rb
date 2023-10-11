@@ -21,8 +21,9 @@ module TextMining
 
     set_info :max_model_length, max_model_length
 
+    deepspeed = { }
     mlm = MaskedLMModel.new checkpoint, file(:model), 
-      :training_args => {:per_device_train_batch_size => 1},
+      :training_args => {:per_device_train_batch_size => 1, deepspeed: deepspeed},
       :tokenizer_args => {:model_max_length => max_model_length, truncation: true}
     
     annotids = AnnotID.setup(annotids)

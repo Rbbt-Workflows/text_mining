@@ -1,15 +1,17 @@
 module TextMining
   input :positive_docids, :array, "Positive DocIDs"
   input :negative_docids, :array, "Positive DocIDs"
-  input :annotation_types, :array, "Annotation types to use"
-  dep :annotids, :docids => :positive_docids
+  input :annotation_types, :array, "Annotation type to process", []
+  dep :annotids, :docids => :positive_docids, :annotation_types => :annotation_types
   dep :fine_tune, :docids => :positive_docids, :annotids => :annotids
   task :classifier => :tsv do |positive_docids,negative_docids,annotation_types|
     checkpoint = step(:fine_tune).load
 
+    deepspeed = {}
+
     model = HuggingfaceModel.new "SequenceClassification", checkpoint, file('model'),
       :annotation_types => annotation_types, 
-      :training_args => {fp16: true},
+      :training_args => {fp16: true, deepspeed: deepspeed},
       :corpus_path => corpus.persistence_path
 
     model.extract_features do |docid,docid_list|
@@ -46,6 +48,17 @@ module TextMining
 
     model.cross_validation(5)
   end
+
+  input :positive_pmids, :array, "Positive PMIDS"
+  input :negative_pmids, :array, "Positive PMIDS"
+  dep :load_pmids, :pmids => :positive_pmids
+  dep :load_pmids, :pmids => :negative_pmids
+  dep_task :pmid_classifier, TextMining, :classifier, :positive_docids => :placeholder, :negative_docids => :placeholder do |jobname,options,dependencies|
+    positive_docids, negative_docids = dependencies.flatten
+
+    {:inputs => options.merge(:positive_docids => positive_docids, :negative_docids => negative_docids)}
+  end
+  
 
 end
 

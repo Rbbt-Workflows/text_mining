@@ -2,8 +2,11 @@ require 'rbbt/entity'
 require 'rbbt/document'
 require 'rbbt/document/annotation'
 require 'rbbt/segment/named_entity'
-require 'rbbt/nlp/open_nlp/sentence_splitter'
-require 'rbbt/ner/g_norm_plus'
+begin
+  require 'rbbt/nlp/open_nlp/sentence_splitter'
+  require 'rbbt/ner/g_norm_plus'
+rescue Exception
+end
 require 'TextMining/entity/ner'
 
 %w(banner dictionary).each do |method|
